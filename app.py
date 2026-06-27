@@ -3,46 +3,8 @@ import requests
 
 app = Flask(__name__)
 
-
-def get_condition(code):
-    weather_codes = {
-        0: "Clear sky",
-        1: "Mainly clear",
-        2: "Partly cloudy",
-        3: "Overcast",
-        45: "Fog",
-        48: "Depositing rime fog",
-        51: "Light drizzle",
-        53: "Moderate drizzle",
-        55: "Dense drizzle",
-        61: "Light rain",
-        63: "Moderate rain",
-        65: "Heavy rain",
-        71: "Light snow",
-        73: "Moderate snow",
-        75: "Heavy snow",
-        80: "Rain showers",
-        81: "Moderate rain showers",
-        82: "Violent rain showers",
-        95: "Thunderstorm",
-        96: "Thunderstorm with hail",
-        99: "Heavy thunderstorm with hail",
-    }
-    return weather_codes.get(code, "Unknown")
-
-
-def convert_aqi(raw_aqi):
-    if raw_aqi <= 50:
-        return 1
-    if raw_aqi <= 100:
-        return 2
-    if raw_aqi <= 150:
-        return 3
-    if raw_aqi <= 200:
-        return 4
-    if raw_aqi <= 300:
-        return 5
-    return 6
+# PASTE YOUR WEATHERAPI KEY HERE
+API_KEY = "db44f9d150a209f3d8be517633f4c8e2"
 
 
 @app.route("/")
@@ -56,67 +18,36 @@ def get_weather():
     if not city:
         return jsonify({"error": "City is required"}), 400
 
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    }
+    url = f"http://api.weatherapi.com/v1/current.json?key={API_KEY}&q={city}&aqi=yes"
 
     try:
-        # 1. Geocoding
-        geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1&format=json"
-        geo_res = requests.get(geo_url, headers=headers, timeout=10).json()
+        res = requests.get(url, timeout=10)
+        data = res.json()
 
-        # Check if the geocoding API returned an error
-        if "error" in geo_res and geo_res["error"]:
+        if "error" in data:
+            # Safely catch and display WeatherAPI's specific error messages
             return (
-                jsonify(
-                    {
-                        "error": f"Geocoding API Error: {geo_res.get('reason', 'Unknown')}"
-                    }
-                ),
+                jsonify({"error": f"WeatherAPI Error: {data['error']['message']}"}),
                 400,
             )
 
-        if "results" not in geo_res or len(geo_res["results"]) == 0:
-            return jsonify({"error": f"Could not find '{city}'. Check spelling."}), 404
+        current = data["current"]
+        location = data["location"]
 
-        location = geo_res["results"][0]
-        lat, lon = location["latitude"], location["longitude"]
-        loc_name = f"{location['name']}, {location.get('country', '')}"
+        # Extract the US-EPA index (1-6 scale)
+        epa_index = current["air_quality"].get("us-epa-index", 1)
 
-        # 2. Weather Data
-        weather_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,surface_pressure,wind_speed_10m,weather_code"
-        weather_res = requests.get(weather_url, headers=headers, timeout=10).json()
-
-        # Check if the Weather API returned an error!
-        if "error" in weather_res and weather_res["error"]:
-            return (
-                jsonify(
-                    {
-                        "error": f"Open-Meteo Blocked Request: {weather_res.get('reason', 'Unknown')}"
-                    }
-                ),
-                429,
-            )
-
-        current = weather_res["current"]
-
-        # 3. Air Quality Data
-        aqi_url = f"https://air-quality-api.open-meteo.com/v1/air-quality?latitude={lat}&longitude={lon}&current=us_aqi"
-        aqi_res = requests.get(aqi_url, headers=headers, timeout=10).json()
-        raw_aqi = aqi_res.get("current", {}).get("us_aqi", 0)  # Safely get AQI
-
-        # 4. JSON Payload
         weather_data = {
-            "location": loc_name,
-            "temp": round(current["temperature_2m"]),
-            "feels_like": round(current["apparent_temperature"]),
-            "condition": get_condition(current["weather_code"]),
-            "desc": get_condition(current["weather_code"]),
-            "humidity": current["relative_humidity_2m"],
-            "pressure": round(current["surface_pressure"]),
-            "wind": round(current["wind_speed_10m"]),
-            "aqi_index": convert_aqi(raw_aqi),
-            "aqi_raw": raw_aqi,
+            "location": f"{location['name']}, {location['country']}",
+            "temp": round(current["temp_c"]),
+            "feels_like": round(current["feelslike_c"]),
+            "condition": current["condition"]["text"],
+            "desc": current["condition"]["text"],
+            "humidity": current["humidity"],
+            "pressure": current["pressure_mb"],
+            "wind": round(current["wind_kph"]),
+            "aqi_index": epa_index,
+            "aqi_raw": epa_index,  # Passing the index as the raw number for the UI text
         }
 
         return jsonify(weather_data)
