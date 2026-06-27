@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AeroWave AI Dashboard</title>
+    <title>AeroBlade Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -15,19 +15,20 @@
 
     <main class="container">
         <header>
-            <h1>AeroWave AI<span>.</span></h1>
+            <h1>AeroBlade<span>.</span></h1>
             <form id="search-form">
                 <input type="text" id="city-input" placeholder="Enter a city name..." autocomplete="off">
                 <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
             </form>
         </header>
 
-        <div id="loading" class="hidden">Connecting to satellites...</div>
+        <div id="loading" class="hidden">Syncing atmospheric matrices...</div>
 
         <div id="dashboard" class="hidden">
 
-            <div class="top-row">
-                <div class="glass-card main-temp">
+            <div class="dashboard-grid">
+
+                <div class="glass-card main-temp animate-pop delay-1">
                     <h2 id="loc-name">City Name</h2>
                     <p id="loc-desc" class="desc">Condition</p>
                     <div class="temp-display">
@@ -35,26 +36,42 @@
                     </div>
                     <p class="feels-like">Feels like <span id="feels-val">0</span>°C</p>
                 </div>
+
+                <div class="glass-card sun-curve-card animate-pop delay-2">
+                    <div class="sun-card-header">
+                        <h4><i class="fa-solid fa-circle-half-stroke text-yellow"></i> Solar Trajectory</h4>
+                        <div class="sun-times-badge">
+                            <span id="sunrise-val">--:--</span> • <span id="sunset-val">--:--</span>
+                        </div>
+                    </div>
+                    <div class="canvas-container">
+                        <canvas id="sunArcCanvas"></canvas>
+                    </div>
+                </div>
+
             </div>
 
             <div class="details-grid">
-                <div class="glass-card detail">
-                    <i class="fa-solid fa-droplet text-blue"></i>
+                <div class="glass-card detail animate-pop delay-3">
+                    <i class="fa-solid fa-droplet text-blue card-icon"></i>
                     <h4>Humidity</h4>
                     <p><span id="hum-val">0</span>%</p>
                 </div>
-                <div class="glass-card detail">
-                    <i class="fa-solid fa-wind text-teal"></i>
-                    <h4>Wind</h4>
+
+                <div class="glass-card detail animate-pop delay-4">
+                    <i class="fa-solid fa-wind text-teal card-icon"></i>
+                    <h4>Wind Speed</h4>
                     <p><span id="wind-val">0</span> km/h</p>
                 </div>
-                <div class="glass-card detail">
-                    <i class="fa-solid fa-gauge text-purple"></i>
-                    <h4>Pressure</h4>
+
+                <div class="glass-card detail animate-pop delay-5">
+                    <i class="fa-solid fa-gauge text-purple card-icon"></i>
+                    <h4>Atmosphere</h4>
                     <p><span id="press-val">0</span> hPa</p>
                 </div>
-                <div class="glass-card detail">
-                    <i class="fa-solid fa-leaf text-green"></i>
+
+                <div class="glass-card detail animate-pop delay-6">
+                    <i class="fa-solid fa-leaf text-green card-icon"></i>
                     <h4>Air Quality</h4>
                     <p id="aqi-val">--</p>
                 </div>

@@ -18,14 +18,14 @@ def get_weather():
     if not city:
         return jsonify({"error": "City is required"}), 400
 
-    url = f"http://api.weatherapi.com/v1/current.json?key={API_KEY}&q={city}&aqi=yes"
+    # Switched to forecast.json to unlock the astronomy (Sunrise/Sunset) data
+    url = f"http://api.weatherapi.com/v1/forecast.json?key={API_KEY}&q={city} India&days=1&aqi=yes"
 
     try:
         res = requests.get(url, timeout=10)
         data = res.json()
 
         if "error" in data:
-            # Safely catch and display WeatherAPI's specific error messages
             return (
                 jsonify({"error": f"WeatherAPI Error: {data['error']['message']}"}),
                 400,
@@ -33,6 +33,9 @@ def get_weather():
 
         current = data["current"]
         location = data["location"]
+
+        # Grab astronomy data for the sun cycle
+        astro = data["forecast"]["forecastday"][0]["astro"]
 
         # Extract the US-EPA index (1-6 scale)
         epa_index = current["air_quality"].get("us-epa-index", 1)
@@ -47,7 +50,9 @@ def get_weather():
             "pressure": current["pressure_mb"],
             "wind": round(current["wind_kph"]),
             "aqi_index": epa_index,
-            "aqi_raw": epa_index,  # Passing the index as the raw number for the UI text
+            "aqi_raw": epa_index,
+            "sunrise": astro["sunrise"],  # WeatherAPI formats this beautifully natively
+            "sunset": astro["sunset"],
         }
 
         return jsonify(weather_data)
