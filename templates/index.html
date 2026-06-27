@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroWave AI Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <main class="container">
+        <header>
+            <h1>AeroWave AI<span>.</span></h1>
+            <form id="search-form">
+                <input type="text" id="city-input" placeholder="Enter a city name..." autocomplete="off">
+                <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </form>
+        </header>
+
+        <div id="loading" class="hidden">Connecting to satellites...</div>
+
+        <div id="dashboard" class="hidden">
+
+            <div class="top-row">
+                <div class="glass-card main-temp">
+                    <h2 id="loc-name">City Name</h2>
+                    <p id="loc-desc" class="desc">Condition</p>
+                    <div class="temp-display">
+                        <span id="temp-val">0</span>°C
+                    </div>
+                    <p class="feels-like">Feels like <span id="feels-val">0</span>°C</p>
+                </div>
+            </div>
+
+            <div class="details-grid">
+                <div class="glass-card detail">
+                    <i class="fa-solid fa-droplet text-blue"></i>
+                    <h4>Humidity</h4>
+                    <p><span id="hum-val">0</span>%</p>
+                </div>
+                <div class="glass-card detail">
+                    <i class="fa-solid fa-wind text-teal"></i>
+                    <h4>Wind</h4>
+                    <p><span id="wind-val">0</span> km/h</p>
+                </div>
+                <div class="glass-card detail">
+                    <i class="fa-solid fa-gauge text-purple"></i>
+                    <h4>Pressure</h4>
+                    <p><span id="press-val">0</span> hPa</p>
+                </div>
+                <div class="glass-card detail">
+                    <i class="fa-solid fa-leaf text-green"></i>
+                    <h4>Air Quality</h4>
+                    <p id="aqi-val">--</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>
