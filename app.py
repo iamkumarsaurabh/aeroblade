@@ -59,28 +59,34 @@ def get_weather():
         return jsonify({"error": "City is required"}), 400
 
     try:
-        # 1. Geocoding: Get exact Latitude and Longitude for the city
         geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1&format=json"
-        geo_res = requests.get(geo_url).json()
+        geo_res = requests.get(geo_url, timeout=10).json()
 
-        if "results" not in geo_res:
-            return jsonify({"error": "City not found on the map."}), 404
+        if "results" not in geo_res or len(geo_res["results"]) == 0:
+            return (
+                jsonify(
+                    {
+                        "error": f"Could not find '{city}' on the map. Try checking the spelling."
+                    }
+                ),
+                404,
+            )
 
         location = geo_res["results"][0]
         lat, lon = location["latitude"], location["longitude"]
         loc_name = f"{location['name']}, {location.get('country', '')}"
 
-        # 2. Fetch highly accurate model-based weather data
+        # 2. Fetch weather data with a 10-second timeout
         weather_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,surface_pressure,wind_speed_10m,weather_code"
-        weather_res = requests.get(weather_url).json()
+        weather_res = requests.get(weather_url, timeout=10).json()
         current = weather_res["current"]
 
-        # 3. Fetch Air Quality Data
+        # 3. Fetch Air Quality Data with a 10-second timeout
         aqi_url = f"https://air-quality-api.open-meteo.com/v1/air-quality?latitude={lat}&longitude={lon}&current=us_aqi"
-        aqi_res = requests.get(aqi_url).json()
+        aqi_res = requests.get(aqi_url, timeout=10).json()
         raw_aqi = aqi_res["current"].get("us_aqi", 0)
 
-        # 4. Package it exactly how your JS script.js expects it
+        # 4. Package it for the frontend
         weather_data = {
             "location": loc_name,
             "temp": round(current["temperature_2m"]),
@@ -90,12 +96,25 @@ def get_weather():
             "humidity": current["relative_humidity_2m"],
             "pressure": round(current["surface_pressure"]),
             "wind": round(current["wind_speed_10m"]),
-            "aqi": convert_aqi(raw_aqi),
+            "aqi_index": convert_aqi(raw_aqi),
+            "aqi_raw": raw_aqi,
         }
 
         return jsonify(weather_data)
 
+    except requests.exceptions.Timeout:
+        print("[Error] The weather API took too long to respond.")
+        return (
+            jsonify(
+                {
+                    "error": "The weather service is currently too slow. Please try again in a moment."
+                }
+            ),
+            504,
+        )
+
     except Exception as e:
+        print(f"[Unexpected Error]: {e}")
         return (
             jsonify(
                 {"error": "Server error while contacting the meteorological models."}
