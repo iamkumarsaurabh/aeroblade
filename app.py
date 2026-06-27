@@ -56,7 +56,6 @@ def get_weather():
     if not city:
         return jsonify({"error": "City is required"}), 400
 
-    # Custom headers to bypass cloud hosting blocks by pretending to be a real browser
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
@@ -65,6 +64,17 @@ def get_weather():
         # 1. Geocoding
         geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1&format=json"
         geo_res = requests.get(geo_url, headers=headers, timeout=10).json()
+
+        # Check if the geocoding API returned an error
+        if "error" in geo_res and geo_res["error"]:
+            return (
+                jsonify(
+                    {
+                        "error": f"Geocoding API Error: {geo_res.get('reason', 'Unknown')}"
+                    }
+                ),
+                400,
+            )
 
         if "results" not in geo_res or len(geo_res["results"]) == 0:
             return jsonify({"error": f"Could not find '{city}'. Check spelling."}), 404
@@ -76,12 +86,24 @@ def get_weather():
         # 2. Weather Data
         weather_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,surface_pressure,wind_speed_10m,weather_code"
         weather_res = requests.get(weather_url, headers=headers, timeout=10).json()
+
+        # Check if the Weather API returned an error!
+        if "error" in weather_res and weather_res["error"]:
+            return (
+                jsonify(
+                    {
+                        "error": f"Open-Meteo Blocked Request: {weather_res.get('reason', 'Unknown')}"
+                    }
+                ),
+                429,
+            )
+
         current = weather_res["current"]
 
         # 3. Air Quality Data
         aqi_url = f"https://air-quality-api.open-meteo.com/v1/air-quality?latitude={lat}&longitude={lon}&current=us_aqi"
         aqi_res = requests.get(aqi_url, headers=headers, timeout=10).json()
-        raw_aqi = aqi_res["current"].get("us_aqi", 0)
+        raw_aqi = aqi_res.get("current", {}).get("us_aqi", 0)  # Safely get AQI
 
         # 4. JSON Payload
         weather_data = {
@@ -108,7 +130,6 @@ def get_weather():
         )
 
     except Exception as e:
-        # CRITICAL DEBUGGING: This sends the EXACT system error directly to your frontend screen
         return jsonify({"error": f"Internal Error: {str(e)}"}), 500
 
 
