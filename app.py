@@ -4,7 +4,7 @@ import requests
 app = Flask(__name__)
 
 # PASTE YOUR WEATHERAPI KEY HERE
-API_KEY = "db44f9d150a209f3d8be517633f4c8e2"
+API_KEY = "ac5a9612bd254ed59a9131042262706"
 
 
 @app.route("/")
