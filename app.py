@@ -4,7 +4,6 @@ import requests
 app = Flask(__name__)
 
 
-# Helper function to translate WMO weather codes into readable text
 def get_condition(code):
     weather_codes = {
         0: "Clear sky",
@@ -32,7 +31,6 @@ def get_condition(code):
     return weather_codes.get(code, "Unknown")
 
 
-# Helper function to convert raw AQI (0-500) to the 1-6 scale your JS expects
 def convert_aqi(raw_aqi):
     if raw_aqi <= 50:
         return 1
@@ -58,35 +56,34 @@ def get_weather():
     if not city:
         return jsonify({"error": "City is required"}), 400
 
+    # Custom headers to bypass cloud hosting blocks by pretending to be a real browser
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
+
     try:
+        # 1. Geocoding
         geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1&format=json"
-        geo_res = requests.get(geo_url, timeout=10).json()
+        geo_res = requests.get(geo_url, headers=headers, timeout=10).json()
 
         if "results" not in geo_res or len(geo_res["results"]) == 0:
-            return (
-                jsonify(
-                    {
-                        "error": f"Could not find '{city}' on the map. Try checking the spelling."
-                    }
-                ),
-                404,
-            )
+            return jsonify({"error": f"Could not find '{city}'. Check spelling."}), 404
 
         location = geo_res["results"][0]
         lat, lon = location["latitude"], location["longitude"]
         loc_name = f"{location['name']}, {location.get('country', '')}"
 
-        # 2. Fetch weather data with a 10-second timeout
+        # 2. Weather Data
         weather_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,surface_pressure,wind_speed_10m,weather_code"
-        weather_res = requests.get(weather_url, timeout=10).json()
+        weather_res = requests.get(weather_url, headers=headers, timeout=10).json()
         current = weather_res["current"]
 
-        # 3. Fetch Air Quality Data with a 10-second timeout
+        # 3. Air Quality Data
         aqi_url = f"https://air-quality-api.open-meteo.com/v1/air-quality?latitude={lat}&longitude={lon}&current=us_aqi"
-        aqi_res = requests.get(aqi_url, timeout=10).json()
+        aqi_res = requests.get(aqi_url, headers=headers, timeout=10).json()
         raw_aqi = aqi_res["current"].get("us_aqi", 0)
 
-        # 4. Package it for the frontend
+        # 4. JSON Payload
         weather_data = {
             "location": loc_name,
             "temp": round(current["temperature_2m"]),
@@ -103,24 +100,16 @@ def get_weather():
         return jsonify(weather_data)
 
     except requests.exceptions.Timeout:
-        print("[Error] The weather API took too long to respond.")
         return (
             jsonify(
-                {
-                    "error": "The weather service is currently too slow. Please try again in a moment."
-                }
+                {"error": "API Connection Timeout. Server took too long to respond."}
             ),
             504,
         )
 
     except Exception as e:
-        print(f"[Unexpected Error]: {e}")
-        return (
-            jsonify(
-                {"error": "Server error while contacting the meteorological models."}
-            ),
-            500,
-        )
+        # CRITICAL DEBUGGING: This sends the EXACT system error directly to your frontend screen
+        return jsonify({"error": f"Internal Error: {str(e)}"}), 500
 
 
 if __name__ == "__main__":
