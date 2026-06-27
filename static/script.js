@@ -23,7 +23,7 @@ function initSunArc(sunriseStr, sunsetStr) {
     const targetDecimalTime = now.getHours() + (now.getMinutes() / 60);
 
     let startTime = null;
-    // SLOWED DOWN: Adjusted from 1800ms to 3500ms to make the animation loop super visible
+   
     const animationDuration = 3500;
 
     function resizeCanvas() {
@@ -39,7 +39,6 @@ function initSunArc(sunriseStr, sunsetStr) {
         const width = canvas.width;
         const height = canvas.height;
 
-        // Dynamic horizontal layout metrics responsive to mobile vs desktop space
         const paddingX = width < 500 ? 25 : 40;
         const graphWidth = width - (paddingX * 2);
         const baselineY = height - 40;

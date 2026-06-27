@@ -3,7 +3,6 @@ import requests
 
 app = Flask(__name__)
 
-# PASTE YOUR WEATHERAPI KEY HERE
 API_KEY = "ac5a9612bd254ed59a9131042262706"
 
 
@@ -18,7 +17,6 @@ def get_weather():
     if not city:
         return jsonify({"error": "City is required"}), 400
 
-    # Switched to forecast.json to unlock the astronomy (Sunrise/Sunset) data
     url = f"http://api.weatherapi.com/v1/forecast.json?key={API_KEY}&q={city} India&days=1&aqi=yes"
 
     try:
@@ -34,10 +32,8 @@ def get_weather():
         current = data["current"]
         location = data["location"]
 
-        # Grab astronomy data for the sun cycle
         astro = data["forecast"]["forecastday"][0]["astro"]
 
-        # Extract the US-EPA index (1-6 scale)
         epa_index = current["air_quality"].get("us-epa-index", 1)
 
         weather_data = {
@@ -51,7 +47,7 @@ def get_weather():
             "wind": round(current["wind_kph"]),
             "aqi_index": epa_index,
             "aqi_raw": epa_index,
-            "sunrise": astro["sunrise"],  # WeatherAPI formats this beautifully natively
+            "sunrise": astro["sunrise"], 
             "sunset": astro["sunset"],
         }
 
