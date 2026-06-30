@@ -339,21 +339,25 @@ canvas {
 }
 
 /* --- Advanced Mobile Customizations --- */
+/* --- Advanced Mobile Customizations --- */
 @media (max-width: 768px) {
+
+    /* Reduce body padding drastically to free up horizontal screen space */
     body {
-        padding: 1.25rem 0.75rem;
+        padding: 1rem 0.75rem;
         align-items: start;
     }
 
     .container {
         gap: 1.25rem;
+        width: 100%;
     }
 
     header {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.75rem;
-        padding-left: 0.5rem;
+        padding-left: 0.25rem;
     }
 
     header h1 {
@@ -369,13 +373,14 @@ canvas {
         gap: 1.25rem;
     }
 
+    /* Shrink internal card padding so the text doesn't overflow */
     .glass-card {
-        padding: 1.5rem 1.25rem;
+        padding: 1.25rem 1rem;
         border-radius: 20px;
     }
 
     .main-temp {
-        padding: 2.5rem 1rem;
+        padding: 2rem 1rem;
     }
 
     .main-temp h2 {
@@ -388,7 +393,7 @@ canvas {
     }
 
     .sun-curve-card {
-        min-height: 240px;
+        min-height: 220px;
         gap: 0.5rem;
     }
 
@@ -400,7 +405,7 @@ canvas {
     /* 2x2 Clean Uniform Grid Block Matrix on Mobile */
     .details-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
+        gap: 0.75rem;
         margin-top: 0;
     }
 

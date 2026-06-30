@@ -37,7 +37,7 @@ def get_weather():
         epa_index = current["air_quality"].get("us-epa-index", 1)
 
         weather_data = {
-            "location": f"{location['name']}, {location['country']}",
+            "location": f"{location['name']}, {location['region']}, {location['country']}",
             "temp": round(current["temp_c"]),
             "feels_like": round(current["feelslike_c"]),
             "condition": current["condition"]["text"],
@@ -47,7 +47,7 @@ def get_weather():
             "wind": round(current["wind_kph"]),
             "aqi_index": epa_index,
             "aqi_raw": epa_index,
-            "sunrise": astro["sunrise"], 
+            "sunrise": astro["sunrise"],
             "sunset": astro["sunset"],
         }
 

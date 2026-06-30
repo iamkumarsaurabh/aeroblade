@@ -23,21 +23,39 @@ function initSunArc(sunriseStr, sunsetStr) {
     const targetDecimalTime = now.getHours() + (now.getMinutes() / 60);
 
     let startTime = null;
-   
     const animationDuration = 3500;
+
+    // We store the logical width and height to use in our drawing math
+    let logicalWidth, logicalHeight;
 
     function resizeCanvas() {
         const rect = canvas.parentNode.getBoundingClientRect();
-        canvas.width = rect.width;
-        canvas.height = rect.height;
+
+        // Grab the display's pixel density (defaults to 1 for standard screens, 2-3 for Retina/Mobile)
+        const dpr = window.devicePixelRatio || 1;
+
+        logicalWidth = rect.width;
+        logicalHeight = rect.height;
+
+        // Multiply the actual canvas resolution by the device pixel ratio
+        canvas.width = logicalWidth * dpr;
+        canvas.height = logicalHeight * dpr;
+
+        // Force the visual CSS size to perfectly fit the container
+        canvas.style.width = `${logicalWidth}px`;
+        canvas.style.height = `${logicalHeight}px`;
+
+        // Scale the drawing context so all our math stays exactly the same but renders ultra-crisp!
+        ctx.scale(dpr, dpr);
     }
     resizeCanvas();
 
     function drawTrajectoryFrame(animatedTime) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Use logicalWidth and logicalHeight for clearing and math
+        ctx.clearRect(0, 0, logicalWidth, logicalHeight);
 
-        const width = canvas.width;
-        const height = canvas.height;
+        const width = logicalWidth;
+        const height = logicalHeight;
 
         const paddingX = width < 500 ? 25 : 40;
         const graphWidth = width - (paddingX * 2);
@@ -113,9 +131,9 @@ function initSunArc(sunriseStr, sunsetStr) {
         ctx.fillStyle = isDaytime ? '#facc15' : '#c084fc';
         ctx.fill();
 
-        // 5. Grid Markers
+        // 5. Grid Markers (Will now render perfectly sharp!)
         ctx.fillStyle = 'var(--text-muted)';
-        ctx.font = '500 9px Poppins';
+        ctx.font = '500 10px Poppins';
         ctx.textAlign = 'center';
         ctx.fillText('00:00', getXCoord(0), baselineY + 18);
         ctx.fillText('12:00', getXCoord(12), baselineY + 18);
